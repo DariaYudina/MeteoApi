@@ -7,6 +7,7 @@ using Microsoft.Extensions.FileProviders;
 using AutoMapper;
 using MeteoApi.Mapping;
 using AutoMapper;
+using MongoDB.Driver;
 
 namespace MeteoApi
 {
@@ -28,11 +29,25 @@ namespace MeteoApi
                 cfg.AddProfile(new WeatherMappingProfile()); // Указываем ваш профиль маппинга
             });
             IMapper mapper = mapperConfig.CreateMapper();
-            builder.Services.AddSingleton(mapper); 
+            builder.Services.AddSingleton(mapper);
 
-            builder.Services.AddScoped<IWeatherLogic, WeatherLogic>();
-            builder.Services.AddScoped<IWeatherRepository, WeatherRepository>();
+            // Настройка подключения к MongoDB
+            var configuration = new ConfigurationBuilder()
+                .AddJsonFile("appsettings.json") // Укажите путь к вашему appsettings.json
+                .Build();
 
+            var mongoConnectionString = configuration.GetConnectionString("MongoDB");
+            var mongoClient = new MongoClient(mongoConnectionString);
+            builder.Services.AddSingleton(mongoClient);
+
+            // Создание WeatherRepository и добавление его в контейнер зависимостей
+            var databaseName = "WeatherInfo"; // Замените на ваше имя базы данных
+            var weatherRepository = new WeatherRepository(mongoClient, databaseName);
+            builder.Services.AddSingleton<IWeatherRepository>(weatherRepository);
+
+            // Создание WeatherLogic и добавление его в контейнер зависимостей
+            var weatherLogic = new WeatherLogic(weatherRepository);
+            builder.Services.AddSingleton<IWeatherLogic>(weatherLogic);
             var app = builder.Build();
 
             app.UseStaticFiles();
