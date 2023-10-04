@@ -41,7 +41,7 @@ namespace MeteoApi
             builder.Services.AddSingleton(mongoClient);
 
             // Создание WeatherRepository и добавление его в контейнер зависимостей
-            var databaseName = "WeatherInfo"; // Замените на ваше имя базы данных
+            var databaseName = "WeatherDB"; // Замените на ваше имя базы данных
             var weatherRepository = new WeatherRepository(mongoClient, databaseName);
             builder.Services.AddSingleton<IWeatherRepository>(weatherRepository);
 
