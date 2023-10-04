@@ -1,0 +1,48 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Meteo Api</title>
+</head>
+<body>
+    <!-- Место для отображения данных -->
+    <div id="weatherData"></div>
+
+    <!-- Кнопка для выполнения запроса -->
+    <button id="fetchButton">Загрузить данные о погоде</button>
+
+    <!-- JavaScript скрипт -->
+    <script>
+        // Функция для отправки GET запроса и обработки данных
+        function fetchData() {
+            fetch('/api/weather', {
+                method: 'GET',
+                headers: {
+                    'Accept': 'application/json',
+                }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    // Обработка данных и отображение на странице
+                    const weatherDataElement = document.getElementById('weatherData');
+                    weatherDataElement.innerHTML = '<h2>Weather Forecast:</h2>';
+                    data.forEach(item => {
+                        const weatherItem = document.createElement('div');
+                        weatherItem.innerHTML = `<strong>Date:</strong> ${item.date}, <strong>Temperature:</strong> ${item.temperatureC}°C, <strong>Summary:</strong> ${item.summary}`;
+                        weatherDataElement.appendChild(weatherItem);
+                    });
+                })
+                .catch(error => {
+                    console.error('Ошибка при получении данных:', error);
+                });
+        }
+
+        // Назначаем обработчик события на кнопку
+        const fetchButton = document.getElementById('fetchButton');
+        fetchButton.addEventListener('click', fetchData);
+
+            // Вызываем функцию для загрузки данных при загрузке страницы (если необходимо)
+            // fetchData();
+    </script>
+</body>
+</html>
