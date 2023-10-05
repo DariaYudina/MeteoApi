@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
 using System.Text;
 using HtmlAgilityPack;
@@ -40,12 +41,12 @@ namespace WeatherParser
                             var cityWeatherUrl = cityUrl + "10-days/";
                             var weatherData = ParseCityWeather(web, cityWeatherUrl);
 
-                            if (weatherData != null)
+                            if (weatherData != null && weatherData.Count > 0)
                             {
                                 Console.WriteLine($"City: {cityName}");
                                 foreach (var weatherEntry in weatherData)
                                 {
-                                    Console.WriteLine($"Date: {weatherEntry.Date}, Temperature: {weatherEntry.Temperature}");
+                                    Console.WriteLine($"Date: {weatherEntry.Date}, Max Temperature: {weatherEntry.MaxTemperature}, Min Temperature: {weatherEntry.MinTemperature}");
                                 }
                             }
                             else
@@ -70,31 +71,6 @@ namespace WeatherParser
         {
             var cityDoc = web.Load(cityWeatherUrl);
             var weatherEntries = new List<WeatherEntry>();
-
-            // Извлечение данных о погоде за 10 дней
-            //var weatherNodes = cityDoc.DocumentNode.SelectNodes("//div[contains(@class, 'widget__row_days')]");
-            //if (weatherNodes != null)
-            //{
-            //    foreach (var weatherNode in weatherNodes)
-            //    {
-            //        var dateNode = weatherNode.SelectSingleNode(".//a[@class='row-item']");
-            //        var temperatureNode = weatherNode.SelectSingleNode(".//div[@class='w_prec__value']");
-
-            //        if (dateNode != null && temperatureNode != null)
-            //        {
-            //            var date = dateNode.InnerText.Trim();
-            //            var temperature = temperatureNode.InnerText.Trim();
-
-            //            var weatherEntry = new WeatherEntry
-            //            {
-            //                Date = date,
-            //                Temperature = temperature
-            //            };
-
-            //            weatherEntries.Add(weatherEntry);
-            //        }
-            //    }
-            //}
 
             var dateContainers = cityDoc.DocumentNode.SelectNodes("//div[@class='widget-row widget-row-days-date']//div[@class='date']");
 
@@ -122,7 +98,31 @@ namespace WeatherParser
 
                         if (DateTime.TryParseExact(date, "d MM yyyy", CultureInfo.InvariantCulture, DateTimeStyles.None, out DateTime parsedDate))
                         {
-                            Console.WriteLine($"Parsed Date: {parsedDate}");
+                            // Извлечь элементы с классом "value style_size_m"
+                            var temperatureElements = cityDoc.DocumentNode.SelectNodes("//div[@class='value style_size_m']");
+
+                            if (temperatureElements != null)
+                            {
+                                foreach (var element in temperatureElements)
+                                {
+                                    // Извлечь значения максимальной и минимальной температуры
+                                    var maxTemperatureElement = element.SelectSingleNode(".//div[@class='maxt']");
+                                    var minTemperatureElement = element.SelectSingleNode(".//div[@class='mint']");
+
+                                    if (maxTemperatureElement != null && minTemperatureElement != null)
+                                    {
+                                        string maxTemperatureCelsius = maxTemperatureElement.SelectSingleNode(".//span[@class='unit unit_temperature_c']")?.InnerText;
+                                        string minTemperatureCelsius = GetTemperature(minTemperatureElement);
+
+                                        weatherEntries.Add(new WeatherEntry
+                                        {
+                                            Date = parsedDate.ToString("yyyy-MM-dd"),
+                                            MaxTemperature = maxTemperatureCelsius,
+                                            MinTemperature = minTemperatureCelsius
+                                        });
+                                    }
+                                }
+                            }
                         }
                         else
                         {
@@ -134,6 +134,21 @@ namespace WeatherParser
 
             return weatherEntries;
         }
+
+        public static string GetTemperature(HtmlNode temperatureElement)
+        {
+            var temperatureCelsius = temperatureElement.SelectSingleNode(".//span[@class='unit unit_temperature_c']");
+            if (temperatureCelsius != null)
+            {
+                var temperatureText = temperatureCelsius.InnerText.Trim();
+                // Заменяем &minus; на -
+                temperatureText = temperatureText.Replace("&minus;", "-");
+                return temperatureText;
+            }
+
+            return null;
+        }
+
         public static int FormatDate(string monthText)
         {
             // Словарь с соответствиями текстовых представлений месяцев и их числовых значений
@@ -174,6 +189,7 @@ namespace WeatherParser
     public class WeatherEntry
     {
         public string Date { get; set; }
-        public string Temperature { get; set; }
+        public string MaxTemperature { get; set; }
+        public string MinTemperature { get; set; }
     }
 }
