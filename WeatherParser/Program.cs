@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using HtmlAgilityPack;
+using Newtonsoft.Json;
 
 namespace WeatherParser
 {
@@ -16,11 +18,12 @@ namespace WeatherParser
             SetEncoding();
             var cityWeatherData = await ParseCitiesWeatherAsync();
             PrintCityWeather(cityWeatherData);
+            SaveWeatherDataToJson(cityWeatherData);
         }
 
-        public static async Task<List<KeyValuePair<string, List<WeatherEntry>>>> ParseCitiesWeatherAsync()
+        public static async Task<Dictionary<string, List<WeatherEntry>>> ParseCitiesWeatherAsync()
         {
-            var cityWeatherData = new List<KeyValuePair<string, List<WeatherEntry>>>();
+            var cityWeatherData = new Dictionary<string, List<WeatherEntry>>();
 
             try
             {
@@ -45,7 +48,7 @@ namespace WeatherParser
 
                             if (weatherData != null && weatherData.Any())
                             {
-                                cityWeatherData.Add(new KeyValuePair<string, List<WeatherEntry>>(cityName, weatherData));
+                                cityWeatherData[cityName] = weatherData;
                             }
                             else
                             {
@@ -68,7 +71,6 @@ namespace WeatherParser
 
             return cityWeatherData;
         }
-
         public static async Task<List<WeatherEntry>> ParseCityWeatherAsync(HttpClient httpClient, string cityWeatherUrl)
         {
             var weatherEntries = new List<WeatherEntry>();
@@ -109,23 +111,25 @@ namespace WeatherParser
 
                                 if (temperatureElements != null)
                                 {
-                                    var maxTemperatureElement = temperatureElements.FirstOrDefault(e => e.SelectSingleNode(".//div[@class='maxt']") != null);
-                                    var minTemperatureElement = temperatureElements.FirstOrDefault(e => e.SelectSingleNode(".//div[@class='mint']") != null);
+                                    // Находим индекс текущей даты
+                                    int dateIndex = dateContainers.IndexOf(dateContainer);
 
-                                    if (maxTemperatureElement != null && minTemperatureElement != null)
+                                    // Используем XPath-выражение для извлечения значения максимальной температуры
+                                    string maxTemperatureXPath = $"(.//div[@class='value style_size_m'])[{dateIndex + 1}]//div[@class='maxt']";
+                                    string maxTemperatureCelsius = GetTemperature(cityDoc, maxTemperatureXPath);
+
+                                    // Используем XPath-выражение для извлечения значения минимальной температуры
+                                    string minTemperatureXPath = $"(.//div[@class='value style_size_m'])[{dateIndex + 1}]//div[@class='mint']";
+                                    string minTemperatureCelsius = GetTemperature(cityDoc, minTemperatureXPath);
+
+                                    if (!string.IsNullOrWhiteSpace(maxTemperatureCelsius) && !string.IsNullOrWhiteSpace(minTemperatureCelsius))
                                     {
-                                        string maxTemperatureCelsius = GetTemperature(maxTemperatureElement);
-                                        string minTemperatureCelsius = GetTemperature(minTemperatureElement);
-
-                                        if (!string.IsNullOrWhiteSpace(maxTemperatureCelsius) && !string.IsNullOrWhiteSpace(minTemperatureCelsius))
+                                        weatherEntries.Add(new WeatherEntry
                                         {
-                                            weatherEntries.Add(new WeatherEntry
-                                            {
-                                                Date = parsedDate.ToString("yyyy-MM-dd"),
-                                                MaxTemperature = maxTemperatureCelsius,
-                                                MinTemperature = minTemperatureCelsius
-                                            });
-                                        }
+                                            Date = parsedDate.ToString("yyyy-MM-dd"),
+                                            MaxTemperature = maxTemperatureCelsius,
+                                            MinTemperature = minTemperatureCelsius
+                                        });
                                     }
                                 }
                             }
@@ -145,9 +149,9 @@ namespace WeatherParser
             return weatherEntries;
         }
 
-        public static string GetTemperature(HtmlNode temperatureElement)
+        public static string GetTemperature(HtmlDocument cityDoc, string xpath)
         {
-            var temperatureCelsius = temperatureElement.SelectSingleNode(".//span[@class='unit unit_temperature_c']");
+            var temperatureCelsius = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
             if (temperatureCelsius != null)
             {
                 var temperatureText = temperatureCelsius.InnerText.Trim();
@@ -190,7 +194,7 @@ namespace WeatherParser
             return -1;
         }
 
-        public static void PrintCityWeather(List<KeyValuePair<string, List<WeatherEntry>>> cityWeatherData)
+        public static void PrintCityWeather(Dictionary<string, List<WeatherEntry>> cityWeatherData)
         {
             foreach (var cityWeatherPair in cityWeatherData)
             {
@@ -206,6 +210,12 @@ namespace WeatherParser
         public static void SetEncoding()
         {
             Console.OutputEncoding = Encoding.UTF8;
+        }
+
+        public static void SaveWeatherDataToJson(Dictionary<string, List<WeatherEntry>> cityWeatherData)
+        {
+            var json = JsonConvert.SerializeObject(cityWeatherData, Newtonsoft.Json.Formatting.Indented);
+            File.WriteAllText("weatherdata.json", json);
         }
     }
 }
