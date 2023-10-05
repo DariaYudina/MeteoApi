@@ -113,15 +113,18 @@ namespace WeatherParser
 
                                     if (maxTemperatureElement != null && minTemperatureElement != null)
                                     {
-                                        string maxTemperatureCelsius = maxTemperatureElement.SelectSingleNode(".//span[@class='unit unit_temperature_c']")?.InnerText;
+                                        string maxTemperatureCelsius = GetTemperature(maxTemperatureElement);
                                         string minTemperatureCelsius = GetTemperature(minTemperatureElement);
 
-                                        weatherEntries.Add(new WeatherEntry
+                                        if (!string.IsNullOrWhiteSpace(maxTemperatureCelsius) && !string.IsNullOrWhiteSpace(minTemperatureCelsius))
                                         {
-                                            Date = parsedDate.ToString("yyyy-MM-dd"),
-                                            MaxTemperature = maxTemperatureCelsius,
-                                            MinTemperature = minTemperatureCelsius
-                                        });
+                                            weatherEntries.Add(new WeatherEntry
+                                            {
+                                                Date = parsedDate.ToString("yyyy-MM-dd"),
+                                                MaxTemperature = maxTemperatureCelsius,
+                                                MinTemperature = minTemperatureCelsius
+                                            });
+                                        }
                                     }
                                 }
                             }
@@ -136,6 +139,7 @@ namespace WeatherParser
 
             return weatherEntries;
         }
+
 
         public static string GetTemperature(HtmlNode temperatureElement)
         {
