@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.Linq;
 using System.Text;
 using HtmlAgilityPack;
 
@@ -11,11 +12,14 @@ namespace WeatherParser
         static void Main(string[] args)
         {
             SetEncoding();
-            ParseCitiesWeather();
+            var cityWeatherData = ParseCitiesWeather();
+            PrintCityWeather(cityWeatherData);
         }
 
-        public static void ParseCitiesWeather()
+        public static Dictionary<string, List<WeatherEntry>> ParseCitiesWeather()
         {
+            var cityWeatherData = new Dictionary<string, List<WeatherEntry>>();
+
             try
             {
                 var web = new HtmlWeb
@@ -41,13 +45,9 @@ namespace WeatherParser
                             var cityWeatherUrl = cityUrl + "10-days/";
                             var weatherData = ParseCityWeather(web, cityWeatherUrl);
 
-                            if (weatherData != null && weatherData.Count > 0)
+                            if (weatherData != null && weatherData.Any())
                             {
-                                Console.WriteLine($"City: {cityName}");
-                                foreach (var weatherEntry in weatherData)
-                                {
-                                    Console.WriteLine($"Date: {weatherEntry.Date}, Max Temperature: {weatherEntry.MaxTemperature}, Min Temperature: {weatherEntry.MinTemperature}");
-                                }
+                                cityWeatherData[cityName] = weatherData;
                             }
                             else
                             {
@@ -65,6 +65,8 @@ namespace WeatherParser
             {
                 Console.WriteLine($"An error occurred: {ex.Message}");
             }
+
+            return cityWeatherData;
         }
 
         public static List<WeatherEntry> ParseCityWeather(HtmlWeb web, string cityWeatherUrl)
@@ -178,6 +180,19 @@ namespace WeatherParser
 
             // Если не удалось преобразовать, вернем -1 или другое значение по умолчанию
             return -1;
+        }
+
+        public static void PrintCityWeather(Dictionary<string, List<WeatherEntry>> cityWeatherData)
+        {
+            foreach (var cityName in cityWeatherData.Keys)
+            {
+                Console.WriteLine($"City: {cityName}");
+                var weatherData = cityWeatherData[cityName];
+                foreach (var weatherEntry in weatherData)
+                {
+                    Console.WriteLine($"Date: {weatherEntry.Date}, Max Temperature: {weatherEntry.MaxTemperature}, Min Temperature: {weatherEntry.MinTemperature}");
+                }
+            }
         }
 
         public static void SetEncoding()
