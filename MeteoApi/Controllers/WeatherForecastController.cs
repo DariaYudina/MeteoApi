@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Entities;
+using HtmlAgilityPack;
 using IMeteoLogic;
 using MeteoApi.Models;
 using Microsoft.AspNetCore.Mvc;
@@ -30,16 +31,42 @@ namespace MeteoApi.Controllers
             {
                 var weatherData = await _weatherLogic.GetAllWeatherDataAsync();
 
-                // Используйте маппер для преобразования WeatherInfo в WeatherForecast
                 var weatherForecasts = _mapper.Map<IEnumerable<WeatherForecast>>(weatherData);
 
-                // Возвращаем успешный результат с данными
                 return Ok(weatherForecasts);
             }
             catch (Exception ex)
             {
-                // Обработка ошибок, если необходимо
                 return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
+        }
+
+        [HttpGet]
+        [Route("parse")]
+        public IActionResult ParseWeather()
+        {
+            try
+            {
+                var web = new HtmlWeb();
+                var doc = web.Load("http://www.gismeteo.ru/");
+
+                var weatherData = new List<string>();
+
+                var temperatureNodes = doc.DocumentNode.SelectNodes("//span[contains(@class, 'unit_temperature_c')]");
+
+                if (temperatureNodes != null)
+                {
+                    foreach (var node in temperatureNodes)
+                    {
+                        weatherData.Add(node.InnerText);
+                    }
+                }
+
+                return Ok(weatherData);
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, "Произошла ошибка при парсинге данных о погоде.");
             }
         }
 

@@ -25,6 +25,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IMeteoDao", "IMeteoDao\IMet
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MeteoDAO", "MeteoDAO\MeteoDAO.csproj", "{F94E50C1-1FB1-4712-A21D-D8F22D800001}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WeatherParser", "WeatherParser\WeatherParser.csproj", "{C472CAA8-E576-4C85-AB04-5E0C98F6C3B8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -55,6 +57,10 @@ Global
 		{F94E50C1-1FB1-4712-A21D-D8F22D800001}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F94E50C1-1FB1-4712-A21D-D8F22D800001}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F94E50C1-1FB1-4712-A21D-D8F22D800001}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C472CAA8-E576-4C85-AB04-5E0C98F6C3B8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C472CAA8-E576-4C85-AB04-5E0C98F6C3B8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C472CAA8-E576-4C85-AB04-5E0C98F6C3B8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C472CAA8-E576-4C85-AB04-5E0C98F6C3B8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

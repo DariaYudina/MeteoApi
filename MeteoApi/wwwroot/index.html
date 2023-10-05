@@ -5,13 +5,8 @@
     <title>Meteo Api</title>
 </head>
 <body>
-    <!-- Место для отображения данных -->
     <div id="weatherData"></div>
 
-    <!-- Кнопка для выполнения запроса -->
-    <button id="fetchButton">Загрузить данные о погоде</button>
-
-    <!-- JavaScript скрипт -->
     <script>
         // Функция для отправки GET запроса и обработки данных
         function fetchData() {
@@ -37,12 +32,16 @@
                 });
         }
 
-        // Назначаем обработчик события на кнопку
-        const fetchButton = document.getElementById('fetchButton');
-        fetchButton.addEventListener('click', fetchData);
+        // Функция для загрузки данных и установки интервала
+        function loadDataWithInterval() {
+            fetchData(); 
+            setInterval(fetchData, 3600000); 
+        }
 
-            // Вызываем функцию для загрузки данных при загрузке страницы (если необходимо)
-            // fetchData();
+         const fetchButton = document.getElementById('fetchButton');
+         fetchButton.addEventListener('click', fetchData);
+
+        loadDataWithInterval();
     </script>
 </body>
 </html>
