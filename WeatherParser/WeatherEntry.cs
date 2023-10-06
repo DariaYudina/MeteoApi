@@ -9,7 +9,10 @@ namespace WeatherParser
     public class WeatherEntry
     {
         public string Date { get; set; }
-        public string MaxTemperature { get; set; }
-        public string MinTemperature { get; set; }
+        public double MaxTemperature { get; set; }
+        public double MinTemperature { get; set; }
+        public double Wind { get; set; }
+        public string Summary { get; set; }
+
     }
 }

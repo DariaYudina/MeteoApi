@@ -43,16 +43,40 @@ namespace MeteoDAO
 
             foreach (var document in documents)
             {
-                var weatherInfoList = WeatherInfoAdapter.ToWeatherInfo(document);
+                var city = document["_id"].AsString;
+                var weatherDataArray = document["weatherData"].AsBsonArray;
 
-                if (weatherInfoList != null)
+                foreach (var weatherData in weatherDataArray)
                 {
-                    weatherDataList.AddRange(weatherInfoList);
+                    var dateString = weatherData["date"].AsString;
+
+                    if (DateTime.TryParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
+                    {
+                        var temperatures = weatherData["temperatures"].AsBsonDocument;
+                        var summary = weatherData["summary"].AsString;
+
+                        // Преобразование данных и создание объекта WeatherInfo
+                        var weatherInfo = new WeatherInfo
+                        {
+                            City = city,
+                            Date = date,
+                            TemperatureC = temperatures["день"].AsInt32, // Выбирайте нужное время суток
+                            Summary = summary
+                        };
+
+                        weatherDataList.Add(weatherInfo);
+                    }
+                    else
+                    {
+                        // Handle date parsing error or log it
+                        Console.WriteLine($"Failed to parse date: {dateString}");
+                    }
                 }
             }
 
             return weatherDataList;
         }
+
 
 
         public Task<ResultDto> AddWeatherDataAsync(WeatherInfo weatherData)

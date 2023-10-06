@@ -1,24 +1,82 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Globalization;
-using System.IO;
-using System.Linq;
-using System.Net.Http;
+﻿using System.Globalization;
 using System.Text;
-using System.Threading.Tasks;
+using Entities;
 using HtmlAgilityPack;
+using IMeteoDao;
+using MeteoDAO;
+using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Bson;
+using MongoDB.Driver;
 using Newtonsoft.Json;
 
 namespace WeatherParser
 {
+
+
     internal class Program
     {
         static async Task Main(string[] args)
         {
-            SetEncoding();
             var cityWeatherData = await ParseCitiesWeatherAsync();
-            PrintCityWeather(cityWeatherData);
-            SaveWeatherDataToJson(cityWeatherData);
+            var jsonResult = WeatherDataToJson(cityWeatherData);
+            var cityDataList = JsonConvert.DeserializeObject<List<CityData>>(jsonResult);
+
+            string connectionString = "mongodb://localhost:27017";
+            var client = new MongoClient(connectionString);
+            var database = client.GetDatabase("WeatherDB");
+
+            var collection = database.GetCollection<CityData>("WeatherInfo");
+
+            foreach (var cityData in cityDataList)
+            {
+                var filter = Builders<CityData>.Filter.Eq(x => x.City, cityData.City); // Поиск документа по имени города
+                var existingDocument = collection.Find(filter).FirstOrDefault();
+
+                if (existingDocument != null)
+                {
+                    // Создаем новый документ, копируя данные из существующего, и обновляем поля, которые нужно обновить
+                    var updatedDocument = new CityData
+                    {
+                        Id = existingDocument.Id, // Сохраняем существующий _id
+                        City = existingDocument.City, // Сохраняем существующее имя города
+                        WeatherEntries = cityData.WeatherEntries // Обновляем погодные данные
+                    };
+
+                    // Заменяем существующий документ данными из JSON, сохраняя _id и имя города неизменными
+                    collection.ReplaceOne(filter, updatedDocument);
+                }
+                else
+                {
+                    // Если город не существует, создаем новый документ
+                    collection.InsertOne(cityData);
+                }
+            }
+
+            var collection2 = database.GetCollection<CityData>("WeatherInfo");
+
+            // Выполняем запрос на получение данных
+            var cityDataList2 = await collection.Find(_ => true).ToListAsync();
+
+            SetEncoding();
+
+
+            //var cityWeatherData = await ParseCitiesWeatherAsync();
+            //PrintCityWeather(cityWeatherData);
+            //var jsonResult = WeatherDataToJson(cityWeatherData);
+            //var bsonDocument = BsonDocument.Parse(jsonResult);
+            //string connectionString = "mongodb://localhost:27017"; 
+            //var client = new MongoClient(connectionString);
+            //var database = client.GetDatabase("WeatherDB"); // Замените на имя вашей базы данных
+            //var collection = database.GetCollection<BsonDocument>("WeatherInfo"); // Замените на имя вашей коллекции
+            //collection.InsertOne(bsonDocument);
+
+            //// Создаем контейнер зависимостей
+            //var serviceProvider = new ServiceCollection()
+            //    .AddScoped<IWeatherRepository, WeatherRepository>() // Используем AddScoped
+            //    .BuildServiceProvider();
+
+            ////var mongoDB = serviceProvider.GetService<IWeatherRepository>();
+            ////myService.AddWeatherDataAsync();
         }
 
         public static async Task<Dictionary<string, List<WeatherEntry>>> ParseCitiesWeatherAsync()
@@ -116,19 +174,19 @@ namespace WeatherParser
 
                                     // Используем XPath-выражение для извлечения значения максимальной температуры
                                     string maxTemperatureXPath = $"(.//div[@class='value style_size_m'])[{dateIndex + 1}]//div[@class='maxt']";
-                                    string maxTemperatureCelsius = GetTemperature(cityDoc, maxTemperatureXPath);
+                                    double? maxTemperature = GetTemperature(cityDoc, maxTemperatureXPath);
 
                                     // Используем XPath-выражение для извлечения значения минимальной температуры
                                     string minTemperatureXPath = $"(.//div[@class='value style_size_m'])[{dateIndex + 1}]//div[@class='mint']";
-                                    string minTemperatureCelsius = GetTemperature(cityDoc, minTemperatureXPath);
+                                    double? minTemperature = GetTemperature(cityDoc, minTemperatureXPath);
 
-                                    if (!string.IsNullOrWhiteSpace(maxTemperatureCelsius) && !string.IsNullOrWhiteSpace(minTemperatureCelsius))
+                                    if (maxTemperature.HasValue && minTemperature.HasValue)
                                     {
                                         weatherEntries.Add(new WeatherEntry
                                         {
                                             Date = parsedDate.ToString("yyyy-MM-dd"),
-                                            MaxTemperature = maxTemperatureCelsius,
-                                            MinTemperature = minTemperatureCelsius
+                                            MaxTemperature = maxTemperature.Value,
+                                            MinTemperature = minTemperature.Value
                                         });
                                     }
                                 }
@@ -149,15 +207,34 @@ namespace WeatherParser
             return weatherEntries;
         }
 
-        public static string GetTemperature(HtmlDocument cityDoc, string xpath)
+        //public static string GetTemperature(HtmlDocument cityDoc, string xpath)
+        //{
+        //    var temperatureCelsius = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
+        //    if (temperatureCelsius != null)
+        //    {
+        //        var temperatureText = temperatureCelsius.InnerText.Trim();
+        //        // Заменяем &minus; на -
+        //        temperatureText = temperatureText.Replace("&minus;", "-");
+        //        return temperatureText;
+        //    }
+
+        //    return null;
+        //}
+
+        public static double? GetTemperature(HtmlDocument cityDoc, string xpath)
         {
-            var temperatureCelsius = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
-            if (temperatureCelsius != null)
+            var temperatureElement = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
+            if (temperatureElement != null)
             {
-                var temperatureText = temperatureCelsius.InnerText.Trim();
-                // Заменяем &minus; на -
+                var temperatureText = temperatureElement.InnerText.Trim();
+
+                // Заменяем специальные символы на обычный минус
                 temperatureText = temperatureText.Replace("&minus;", "-");
-                return temperatureText;
+
+                if (double.TryParse(temperatureText, out var temperature))
+                {
+                    return temperature;
+                }
             }
 
             return null;
@@ -212,10 +289,43 @@ namespace WeatherParser
             Console.OutputEncoding = Encoding.UTF8;
         }
 
-        public static void SaveWeatherDataToJson(Dictionary<string, List<WeatherEntry>> cityWeatherData)
+        public static string WeatherDataToJson(Dictionary<string, List<WeatherEntry>> cityWeatherData)
         {
-            var json = JsonConvert.SerializeObject(cityWeatherData, Newtonsoft.Json.Formatting.Indented);
-            File.WriteAllText("weatherdata.json", json);
+            var cityDataList = new List<CityData>();
+
+            foreach (var cityEntry in cityWeatherData)
+            {
+                var cityData = new CityData
+                {
+                    City = cityEntry.Key,
+                    WeatherEntries = cityEntry.Value
+                };
+
+                cityDataList.Add(cityData);
+            }
+
+            return JsonConvert.SerializeObject(cityDataList, Newtonsoft.Json.Formatting.Indented);
+        }
+
+        public static async Task<Dictionary<string, List<WeatherEntry>>> GetWeatherDataFromDatabase()
+        {
+            string connectionString = "mongodb://localhost:27017";
+            var client = new MongoClient(connectionString);
+            var database = client.GetDatabase("WeatherDB"); // Замените на имя вашей базы данных
+            var collection = database.GetCollection<CityData>("WeatherInfo"); // Замените на имя вашей коллекции
+
+            var filter = Builders<CityData>.Filter.Empty; // Фильтр пустой, чтобы выбрать все документы
+
+            var cityDataList = await collection.Find(filter).ToListAsync();
+
+            var cityWeatherData = new Dictionary<string, List<WeatherEntry>>();
+
+            foreach (var cityData in cityDataList)
+            {
+                cityWeatherData[cityData.City] = cityData.WeatherEntries;
+            }
+
+            return cityWeatherData;
         }
     }
 }

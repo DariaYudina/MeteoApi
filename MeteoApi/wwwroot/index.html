@@ -3,45 +3,10 @@
 <head>
     <meta charset="utf-8" />
     <title>Meteo Api</title>
+    <script src="weather.js"></script>
 </head>
 <body>
+    <h2 id="cityName"></h2> 
     <div id="weatherData"></div>
-
-    <script>
-        // Функция для отправки GET запроса и обработки данных
-        function fetchData() {
-            fetch('/api/weather', {
-                method: 'GET',
-                headers: {
-                    'Accept': 'application/json',
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    // Обработка данных и отображение на странице
-                    const weatherDataElement = document.getElementById('weatherData');
-                    weatherDataElement.innerHTML = '<h2>Weather Forecast:</h2>';
-                    data.forEach(item => {
-                        const weatherItem = document.createElement('div');
-                        weatherItem.innerHTML = `<strong>Date:</strong> ${item.date}, <strong>Temperature:</strong> ${item.temperatureC}°C, <strong>Summary:</strong> ${item.summary}`;
-                        weatherDataElement.appendChild(weatherItem);
-                    });
-                })
-                .catch(error => {
-                    console.error('Ошибка при получении данных:', error);
-                });
-        }
-
-        // Функция для загрузки данных и установки интервала
-        function loadDataWithInterval() {
-            fetchData(); 
-            setInterval(fetchData, 3600000); 
-        }
-
-         //const fetchButton = document.getElementById('fetchButton');
-         //fetchButton.addEventListener('click', fetchData);
-
-        loadDataWithInterval();
-    </script>
 </body>
 </html>
