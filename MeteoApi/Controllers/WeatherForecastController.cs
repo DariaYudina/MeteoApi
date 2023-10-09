@@ -33,7 +33,6 @@ namespace MeteoApi.Controllers
             {
                 var cityWeatherData = await _weatherLogic.GetAllWeatherDataAsync();
 
-                // Преобразуем данные о погоде в ожидаемый формат и сериализуем их в JSON
                 var weatherForecasts = cityWeatherData.Select(cityData => new
                 {
                     City = cityData.City,
@@ -42,7 +41,7 @@ namespace MeteoApi.Controllers
 
                 var jsonResult = JsonConvert.SerializeObject(weatherForecasts);
 
-                return Content(jsonResult, "application/json"); // Отправляем JSON клиенту
+                return Content(jsonResult, "application/json"); 
             }
             catch (Exception ex)
             {
