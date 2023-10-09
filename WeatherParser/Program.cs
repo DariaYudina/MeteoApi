@@ -17,14 +17,16 @@ namespace WeatherParser
     {
         static async Task Main(string[] args)
         {
+            SetEncoding();
             var cityWeatherData = await ParseCitiesWeatherAsync();
+            await ParseCitiesWeatherAsync();
+            PrintCityWeather(cityWeatherData);
             var jsonResult = WeatherDataToJson(cityWeatherData);
             var cityDataList = JsonConvert.DeserializeObject<List<CityData>>(jsonResult);
 
             string connectionString = "mongodb://localhost:27017";
             var client = new MongoClient(connectionString);
             var database = client.GetDatabase("WeatherDB");
-
             var collection = database.GetCollection<CityData>("WeatherInfo");
 
             foreach (var cityData in cityDataList)
@@ -56,27 +58,6 @@ namespace WeatherParser
 
             // Выполняем запрос на получение данных
             var cityDataList2 = await collection.Find(_ => true).ToListAsync();
-
-            SetEncoding();
-
-
-            //var cityWeatherData = await ParseCitiesWeatherAsync();
-            //PrintCityWeather(cityWeatherData);
-            //var jsonResult = WeatherDataToJson(cityWeatherData);
-            //var bsonDocument = BsonDocument.Parse(jsonResult);
-            //string connectionString = "mongodb://localhost:27017"; 
-            //var client = new MongoClient(connectionString);
-            //var database = client.GetDatabase("WeatherDB"); // Замените на имя вашей базы данных
-            //var collection = database.GetCollection<BsonDocument>("WeatherInfo"); // Замените на имя вашей коллекции
-            //collection.InsertOne(bsonDocument);
-
-            //// Создаем контейнер зависимостей
-            //var serviceProvider = new ServiceCollection()
-            //    .AddScoped<IWeatherRepository, WeatherRepository>() // Используем AddScoped
-            //    .BuildServiceProvider();
-
-            ////var mongoDB = serviceProvider.GetService<IWeatherRepository>();
-            ////myService.AddWeatherDataAsync();
         }
 
         public static async Task<Dictionary<string, List<WeatherEntry>>> ParseCitiesWeatherAsync()
@@ -184,7 +165,7 @@ namespace WeatherParser
                                     {
                                         weatherEntries.Add(new WeatherEntry
                                         {
-                                            Date = parsedDate.ToString("yyyy-MM-dd"),
+                                            Date = parsedDate,
                                             MaxTemperature = maxTemperature.Value,
                                             MinTemperature = minTemperature.Value
                                         });
