@@ -2,8 +2,10 @@
 using Entities;
 using HtmlAgilityPack;
 using IMeteoLogic;
-using MeteoApi.Models;
+using MeteoApi.Models ;
 using Microsoft.AspNetCore.Mvc;
+using Entities;
+using Newtonsoft.Json;
 
 namespace MeteoApi.Controllers
 {
@@ -31,22 +33,23 @@ namespace MeteoApi.Controllers
             {
                 var cityWeatherData = await _weatherLogic.GetAllWeatherDataAsync();
 
-                // Создаем список WeatherEntry
-                var weatherEntries = new List<WeatherEntry>();
-
-                // Проходим по данным о погоде для каждого города и объединяем их в один список
-                foreach (var cityData in cityWeatherData)
+                // Преобразуем данные о погоде в ожидаемый формат и сериализуем их в JSON
+                var weatherForecasts = cityWeatherData.Select(cityData => new
                 {
-                    weatherEntries.AddRange(cityData.Weather);
-                }
+                    City = cityData.City,
+                    WeatherEntries = cityData.WeatherEntries
+                });
 
-                return Ok(weatherEntries);
+                var jsonResult = JsonConvert.SerializeObject(weatherForecasts);
+
+                return Content(jsonResult, "application/json"); // Отправляем JSON клиенту
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
 
         [HttpGet]

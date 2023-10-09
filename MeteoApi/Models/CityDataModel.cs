@@ -1,20 +1,15 @@
 ﻿using MongoDB.Bson.Serialization.Attributes;
 using MongoDB.Bson;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
+using System.Text.Json.Serialization;
 
-namespace Entities
+namespace MeteoApi.Models
 {
-    public class CityData
+    public class CityDataModel
     {
         [BsonId]
         [JsonIgnore] // Этот атрибут исключает поле Id из JSON-сериализации
         public ObjectId Id { get; set; }
         public string City { get; set; }
-        public List<WeatherEntry> WeatherEntries { get; set; }
+        public List<WeatherForecastModel> WeatherEntries { get; set; }
     }
 }

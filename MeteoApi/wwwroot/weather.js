@@ -12,34 +12,21 @@ function fetchData() {
             const cityContainer = document.getElementById('cityContainer');
             cityContainer.innerHTML = '';
 
-            // Группируем данные по городам
-            const cityDataMap = new Map();
-
-            data.forEach(weatherInfo => {
-                const city = weatherInfo.city;
-
-                if (!cityDataMap.has(city)) {
-                    cityDataMap.set(city, []);
-                }
-
-                cityDataMap.get(city).push(weatherInfo);
-            });
-
             // Выводим данные для каждого города
-            cityDataMap.forEach((cityData, city) => {
+            data.forEach(cityData => {
                 const cityBlock = document.createElement('div');
                 cityBlock.className = 'city-block';
-                cityBlock.innerHTML = `<h2>${city}</h2>`;
+                cityBlock.innerHTML = `<h2>${cityData.City}</h2>`;
 
-                cityData.forEach(weatherInfo => {
+                cityData.WeatherEntries.forEach(weatherInfo => {
                     const weatherItem = document.createElement('div');
                     weatherItem.className = 'weather-item';
                     weatherItem.innerHTML = `
-                    <strong>Date:</strong> ${weatherInfo.date}<br>
-                    <strong>Max Temperature:</strong> ${weatherInfo.maxTemperature}°C<br>
-                    <strong>Min Temperature:</strong> ${weatherInfo.minTemperature}°C<br>
-                    <strong>Wind:</strong> ${weatherInfo.wind}<br>
-                    <strong>Summary:</strong> ${weatherInfo.summary}<br><br>
+                    <strong>Date:</strong> ${weatherInfo.Date}<br>
+                    <strong>Max Temperature:</strong> ${weatherInfo.MaxTemperature}°C<br>
+                    <strong>Min Temperature:</strong> ${weatherInfo.MinTemperature}°C<br>
+                    <strong>Wind:</strong> ${weatherInfo.Wind}<br>
+                    <strong>Summary:</strong> ${weatherInfo.Summary}<br><br>
                 `;
 
                     cityBlock.appendChild(weatherItem);

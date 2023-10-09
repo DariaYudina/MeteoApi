@@ -36,21 +36,23 @@ namespace MeteoDAO
 
         public async Task<IEnumerable<CityWeatherData>> GetAllWeatherDataAsync()
         {
-            var collection = _database.GetCollection<CityData>("WeatherInfo");
-            var filter = Builders<CityData>.Filter.Empty;
+            var collection = _database.GetCollection<CityWeatherData>("WeatherInfo");
+            var filter = Builders<CityWeatherData>.Filter.Empty;
             var documents = await collection.Find(filter).ToListAsync();
 
             var cityWeatherDataList = new List<CityWeatherData>();
 
             foreach (var cityData in documents)
             {
+                var id = cityData.Id;
                 var cityName = cityData.City;
                 var weatherEntries = cityData.WeatherEntries;
 
                 var cityWeatherData = new CityWeatherData
                 {
-                    CityName = cityName,
-                    Weather = weatherEntries
+                    Id = id,
+                    City = cityName,
+                    WeatherEntries = weatherEntries
                 };
 
                 cityWeatherDataList.Add(cityWeatherData);

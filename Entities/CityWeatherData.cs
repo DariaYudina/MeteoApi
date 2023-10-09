@@ -14,7 +14,7 @@ namespace Entities
         [BsonId]
         [JsonIgnore] // Этот атрибут исключает поле Id из JSON-сериализации
         public ObjectId Id { get; set; }
-        public string CityName { get; set; }
-        public List<WeatherEntry> Weather { get; set; }
+        public string City { get; set; }
+        public List<WeatherEntry> WeatherEntries { get; set; }
     }
 }

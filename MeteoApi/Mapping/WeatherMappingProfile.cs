@@ -8,11 +8,12 @@ namespace MeteoApi.Mapping
     {
         public WeatherMappingProfile()
         {
-            CreateMap<WeatherEntry, WeatherForecast>()
-                .ForMember(dest => dest.Date, opt => opt.MapFrom(src => src.Date))
-                .ForMember(dest => dest.TemperatureC, opt => opt.MapFrom(src => (int)src.MaxTemperature)) // Пример преобразования температуры
-                .ForMember(dest => dest.Summary, opt => opt.MapFrom(src => src.Summary))
-                .ForMember(dest => dest.City, opt => opt.Ignore());
+            CreateMap<CityWeatherData, CityDataModel>()
+                        .ForMember(dest => dest.WeatherEntries, opt => opt.MapFrom(src => src.WeatherEntries));
+
+            CreateMap<WeatherEntry, WeatherForecastModel>()
+                .ForMember(dest => dest.MaxTemperatureС, opt => opt.MapFrom(src => src.MaxTemperature))
+                .ForMember(dest => dest.MinTemperatureС, opt => opt.MapFrom(src => src.MinTemperature));
         }
     }
 }
