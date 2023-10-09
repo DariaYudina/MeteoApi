@@ -11,8 +11,6 @@ using Newtonsoft.Json;
 
 namespace WeatherParser
 {
-
-
     internal class Program
     {
         static async Task Main(string[] args)

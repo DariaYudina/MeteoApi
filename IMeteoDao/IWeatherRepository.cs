@@ -9,7 +9,7 @@ namespace IMeteoDao
 {
     public interface IWeatherRepository
     {
-        Task<IEnumerable<WeatherInfo>> GetAllWeatherDataAsync();
+        Task<IEnumerable<CityWeatherData>> GetAllWeatherDataAsync();
         Task<WeatherInfo> GetWeatherForecastAsync(string city, DateTime date);
         IEnumerable<string> GetAvailableCities();
         IEnumerable<DateTime> GetAvailableDates();

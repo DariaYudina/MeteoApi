@@ -29,10 +29,12 @@ namespace MeteoApi.Controllers
         {
             try
             {
-                var weatherData = await _weatherLogic.GetAllWeatherDataAsync();
+                var cityWeatherData = await _weatherLogic.GetAllWeatherDataAsync();
 
-                var weatherForecasts = _mapper.Map<IEnumerable<WeatherForecast>>(weatherData);
-
+                // Маппинг объектов CityWeatherData и WeatherEntry в WeatherForecast
+                var weatherForecasts = cityWeatherData
+                    .SelectMany(cityData => cityData.Weather)
+                    .Select(weatherEntry => _mapper.Map<WeatherForecast>(weatherEntry));
                 return Ok(weatherForecasts);
             }
             catch (Exception ex)

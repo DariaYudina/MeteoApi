@@ -15,12 +15,14 @@ namespace MeteoDAO
     {
         private readonly IMongoDatabase _database;
         private readonly IWeatherRepository _weatherRepository;
-        private MongoClient mongoClient;
-        private string databaseName;
+        private readonly MongoClient _mongoClient;
+        private readonly string _databaseName;
 
         public WeatherRepository(MongoClient mongoClient, string databaseName)
         {
             _database = mongoClient.GetDatabase(databaseName);
+            _databaseName = databaseName;
+            _databaseName = _databaseName.ToLower();    
         }
 
         public WeatherRepository(
@@ -32,52 +34,30 @@ namespace MeteoDAO
             _database = mongoClient.GetDatabase(databaseName);
         }
 
-        public async Task<IEnumerable<WeatherInfo>> GetAllWeatherDataAsync()
+        public async Task<IEnumerable<CityWeatherData>> GetAllWeatherDataAsync()
         {
-            var collection = _database.GetCollection<BsonDocument>("WeatherInfo");
-
-            var filter = Builders<BsonDocument>.Filter.Empty; // Пустой фильтр для выборки всех документов
+            var collection = _database.GetCollection<CityData>("WeatherInfo");
+            var filter = Builders<CityData>.Filter.Empty;
             var documents = await collection.Find(filter).ToListAsync();
 
-            var weatherDataList = new List<WeatherInfo>();
+            var cityWeatherDataList = new List<CityWeatherData>();
 
-            foreach (var document in documents)
+            foreach (var cityData in documents)
             {
-                var city = document["_id"].AsString;
-                var weatherDataArray = document["weatherData"].AsBsonArray;
+                var cityName = cityData.City;
+                var weatherEntries = cityData.WeatherEntries;
 
-                foreach (var weatherData in weatherDataArray)
+                var cityWeatherData = new CityWeatherData
                 {
-                    var dateString = weatherData["date"].AsString;
+                    CityName = cityName,
+                    Weather = weatherEntries
+                };
 
-                    if (DateTime.TryParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-                    {
-                        var temperatures = weatherData["temperatures"].AsBsonDocument;
-                        var summary = weatherData["summary"].AsString;
-
-                        // Преобразование данных и создание объекта WeatherInfo
-                        var weatherInfo = new WeatherInfo
-                        {
-                            City = city,
-                            Date = date,
-                            TemperatureC = temperatures["день"].AsInt32, // Выбирайте нужное время суток
-                            Summary = summary
-                        };
-
-                        weatherDataList.Add(weatherInfo);
-                    }
-                    else
-                    {
-                        // Handle date parsing error or log it
-                        Console.WriteLine($"Failed to parse date: {dateString}");
-                    }
-                }
+                cityWeatherDataList.Add(cityWeatherData);
             }
 
-            return weatherDataList;
+            return cityWeatherDataList;
         }
-
-
 
         public Task<ResultDto> AddWeatherDataAsync(WeatherInfo weatherData)
         {
@@ -97,14 +77,12 @@ namespace MeteoDAO
         //        {
         //            City = "Default City 1",
         //            Date = DateTime.Now.AddDays(1),
-        //            TemperatureC = 25,
         //            Summary = "Sunny"
         //        },
         //        new WeatherInfo
         //        {
         //            City = "Default City 2",
         //            Date = DateTime.Now.AddDays(2),
-        //            TemperatureC = 20,
         //            Summary = "Cloudy"
         //        },
         //    };
@@ -135,48 +113,6 @@ namespace MeteoDAO
         public Task<ResultDto> UpdateWeatherDataAsync(int id, WeatherInfo weatherData)
         {
             throw new NotImplementedException();
-        }
-    }
-    public static class WeatherInfoAdapter
-    {
-        public static List<WeatherInfo> ToWeatherInfo(this BsonDocument document)
-        {
-            var city = document["_id"].AsString;
-            var weatherDataArray = document["weatherData"].AsBsonArray;
-
-            var weatherInfoList = new List<WeatherInfo>();
-
-            foreach (var weatherData in weatherDataArray)
-            {
-                var dateString = weatherData["date"].AsString;
-
-                if (DateTime.TryParseExact(dateString, "yyyy-MM-dd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date))
-                {
-                    var temperatures = weatherData["temperatures"].AsBsonDocument;
-                    var summary = weatherData["summary"].AsString;
-
-                    // Преобразование данных и создание объекта WeatherInfo
-                    var weatherInfo = new WeatherInfo
-                    {
-                        City = city,
-                        Date = date,
-                        TemperatureC = temperatures["день"].AsInt32, // Выбирайте нужное время суток
-                        Summary = summary
-                    };
-
-                    weatherInfoList.Add(weatherInfo);
-                }
-                else
-                {
-                    // Handle date parsing error or log it
-                    Console.WriteLine($"Failed to parse date: {dateString}");
-                }
-            }
-
-            // Add a debug statement here to check the content of weatherInfoList
-            Console.WriteLine($"weatherInfoList count: {weatherInfoList.Count}");
-
-            return weatherInfoList;
         }
     }
 }

@@ -8,21 +8,44 @@ function fetchData() {
     })
         .then(response => response.json())
         .then(data => {
-            // Обработка данных и отображение на странице
-            const weatherDataElement = document.getElementById('weatherData');
-            const cityNameElement = document.getElementById('cityName'); // Элемент для названия города
+            // Очищаем контейнер с данными
+            const cityContainer = document.getElementById('cityContainer');
+            cityContainer.innerHTML = '';
 
-            // Устанавливаем название города только один раз
-            if (cityNameElement.innerHTML === '') {
-                cityNameElement.innerHTML = `<h4>${data[0].city} прогноз погоды:</h2>`;
-            }
+            // Группируем данные по городам
+            const cityDataMap = new Map();
 
-            weatherDataElement.innerHTML = ''; // Очищаем блок перед добавлением новых данных
+            data.forEach(weatherInfo => {
+                const city = weatherInfo.city;
 
-            data.forEach(item => {
-                const weatherItem = document.createElement('div');
-                weatherItem.innerHTML = `<strong>Date:</strong> ${item.date}, <strong>Temperature:</strong> ${item.temperatureC}°C, <strong>Summary:</strong> ${item.summary}`;
-                weatherDataElement.appendChild(weatherItem);
+                if (!cityDataMap.has(city)) {
+                    cityDataMap.set(city, []);
+                }
+
+                cityDataMap.get(city).push(weatherInfo);
+            });
+
+            // Выводим данные для каждого города
+            cityDataMap.forEach((cityData, city) => {
+                const cityBlock = document.createElement('div');
+                cityBlock.className = 'city-block';
+                cityBlock.innerHTML = `<h2>${city}</h2>`;
+
+                cityData.forEach(weatherInfo => {
+                    const weatherItem = document.createElement('div');
+                    weatherItem.className = 'weather-item';
+                    weatherItem.innerHTML = `
+                        <strong>Date:</strong> ${weatherInfo.date}<br>
+                        <strong>Max Temperature:</strong> ${weatherInfo.maxTemperature}°C<br>
+                        <strong>Min Temperature:</strong> ${weatherInfo.minTemperature}°C<br>
+                        <strong>Wind:</strong> ${weatherInfo.wind}<br>
+                        <strong>Summary:</strong> ${weatherInfo.summary}<br><br>
+                    `;
+
+                    cityBlock.appendChild(weatherItem);
+                });
+
+                cityContainer.appendChild(cityBlock);
             });
         })
         .catch(error => {

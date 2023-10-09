@@ -6,9 +6,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using Entities;
 
-namespace WeatherParser
+namespace Entities
 {
     public class CityData
     {

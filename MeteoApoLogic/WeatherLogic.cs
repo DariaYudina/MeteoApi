@@ -19,7 +19,7 @@ namespace MeteoApoLogic
     {
         private readonly IWeatherRepository _weatherRepository; 
 
-        public async Task<IEnumerable<WeatherInfo>> GetAllWeatherDataAsync()
+        public async Task<IEnumerable<CityWeatherData>> GetAllWeatherDataAsync()
         {
             try
             {

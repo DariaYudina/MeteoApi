@@ -9,7 +9,7 @@ namespace IMeteoLogic
 {
     public interface IWeatherLogic
     {
-        Task<IEnumerable<WeatherInfo>> GetAllWeatherDataAsync();
+        Task<IEnumerable<CityWeatherData>> GetAllWeatherDataAsync();
         Task<WeatherInfo> GetWeatherForecastAsync(string city, DateTime date);
 
         IEnumerable<string> GetAvailableCities();

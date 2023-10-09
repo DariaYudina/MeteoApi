@@ -16,6 +16,7 @@
     <ProjectReference Include="..\IMeteoLogic\IMeteoLogic.csproj" />
     <ProjectReference Include="..\MeteoApoLogic\MeteoApiLogic.csproj" />
     <ProjectReference Include="..\MeteoDAO\MeteoDAO.csproj" />
+    <ProjectReference Include="..\WeatherParser\WeatherParser.csproj" />
   </ItemGroup>
 
 </Project>
