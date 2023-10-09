@@ -31,17 +31,23 @@ namespace MeteoApi.Controllers
             {
                 var cityWeatherData = await _weatherLogic.GetAllWeatherDataAsync();
 
-                // Маппинг объектов CityWeatherData и WeatherEntry в WeatherForecast
-                var weatherForecasts = cityWeatherData
-                    .SelectMany(cityData => cityData.Weather)
-                    .Select(weatherEntry => _mapper.Map<WeatherForecast>(weatherEntry));
-                return Ok(weatherForecasts);
+                // Создаем список WeatherEntry
+                var weatherEntries = new List<WeatherEntry>();
+
+                // Проходим по данным о погоде для каждого города и объединяем их в один список
+                foreach (var cityData in cityWeatherData)
+                {
+                    weatherEntries.AddRange(cityData.Weather);
+                }
+
+                return Ok(weatherEntries);
             }
             catch (Exception ex)
             {
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+
 
         [HttpGet]
         [Route("parse")]

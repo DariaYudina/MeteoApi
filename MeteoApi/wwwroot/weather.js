@@ -35,12 +35,12 @@ function fetchData() {
                     const weatherItem = document.createElement('div');
                     weatherItem.className = 'weather-item';
                     weatherItem.innerHTML = `
-                        <strong>Date:</strong> ${weatherInfo.date}<br>
-                        <strong>Max Temperature:</strong> ${weatherInfo.maxTemperature}°C<br>
-                        <strong>Min Temperature:</strong> ${weatherInfo.minTemperature}°C<br>
-                        <strong>Wind:</strong> ${weatherInfo.wind}<br>
-                        <strong>Summary:</strong> ${weatherInfo.summary}<br><br>
-                    `;
+                    <strong>Date:</strong> ${weatherInfo.date}<br>
+                    <strong>Max Temperature:</strong> ${weatherInfo.maxTemperature}°C<br>
+                    <strong>Min Temperature:</strong> ${weatherInfo.minTemperature}°C<br>
+                    <strong>Wind:</strong> ${weatherInfo.wind}<br>
+                    <strong>Summary:</strong> ${weatherInfo.summary}<br><br>
+                `;
 
                     cityBlock.appendChild(weatherItem);
                 });
@@ -58,4 +58,6 @@ function loadDataWithInterval() {
     fetchData();
     setInterval(fetchData, 3600000);
 }
+
+// Вызываем функцию для загрузки данных
 loadDataWithInterval();
