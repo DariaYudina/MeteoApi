@@ -11,6 +11,8 @@ using Newtonsoft.Json;
 
 namespace WeatherParser
 {
+
+
     internal class Program
     {
         static async Task Main(string[] args)
@@ -185,21 +187,6 @@ namespace WeatherParser
 
             return weatherEntries;
         }
-
-        //public static string GetTemperature(HtmlDocument cityDoc, string xpath)
-        //{
-        //    var temperatureCelsius = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
-        //    if (temperatureCelsius != null)
-        //    {
-        //        var temperatureText = temperatureCelsius.InnerText.Trim();
-        //        // Заменяем &minus; на -
-        //        temperatureText = temperatureText.Replace("&minus;", "-");
-        //        return temperatureText;
-        //    }
-
-        //    return null;
-        //}
-
         public static double? GetTemperature(HtmlDocument cityDoc, string xpath)
         {
             var temperatureElement = cityDoc.DocumentNode.SelectSingleNode(xpath + "/span[@class='unit unit_temperature_c']");
@@ -284,27 +271,6 @@ namespace WeatherParser
             }
 
             return JsonConvert.SerializeObject(cityDataList, Newtonsoft.Json.Formatting.Indented);
-        }
-
-        public static async Task<Dictionary<string, List<WeatherEntry>>> GetWeatherDataFromDatabase()
-        {
-            string connectionString = "mongodb://localhost:27017";
-            var client = new MongoClient(connectionString);
-            var database = client.GetDatabase("WeatherDB"); // Замените на имя вашей базы данных
-            var collection = database.GetCollection<CityData>("WeatherInfo"); // Замените на имя вашей коллекции
-
-            var filter = Builders<CityData>.Filter.Empty; // Фильтр пустой, чтобы выбрать все документы
-
-            var cityDataList = await collection.Find(filter).ToListAsync();
-
-            var cityWeatherData = new Dictionary<string, List<WeatherEntry>>();
-
-            foreach (var cityData in cityDataList)
-            {
-                cityWeatherData[cityData.City] = cityData.WeatherEntries;
-            }
-
-            return cityWeatherData;
         }
     }
 }
